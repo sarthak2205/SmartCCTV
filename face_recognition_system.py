@@ -1,16 +1,35 @@
+import datetime
+import time
+
 import face_recognition
 import cv2
 import os
 import glob
 import numpy as np
 
+import winsound
+
 class FaceRecognitionAlgo:
     def __init__(self):
         self.recognised_face_array = []
         self.recognised_face_name = []
+        self.unknown_face_id = 0
 
         # Resize frame for a faster speed
         self.frame_resizing = 0.25
+
+        # Directory to save unknown faces
+        self.unknown_faces_dir = "videos"
+        if not os.path.exists(self.unknown_faces_dir):
+            os.makedirs(self.unknown_faces_dir)
+
+        # Timer variables
+        self.timer_active = False
+        self.timer_start_time = None
+        self.capture_delay = 7  # Delay in seconds for capturing the unknown faces - Sarthak
+
+        self.video_writer = None
+        self.is_recording = False
 
     def load_encoding_images(self, images_path):
         """
@@ -48,7 +67,7 @@ class FaceRecognitionAlgo:
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         face_names = []
-        for face_encoding in face_encodings:
+        for face_encoding, face_loc in zip(face_encodings, face_locations):
             # See if the face is a match for the known face(s)
             matches = face_recognition.compare_faces(self.recognised_face_array, face_encoding)
             name = "Unknown"
@@ -64,7 +83,36 @@ class FaceRecognitionAlgo:
             best_match_index = np.argmin(face_distances)
             if matches[best_match_index]:
                 name = self.recognised_face_name[best_match_index]
-                color = (0, 255, 0)
+                if name.startswith('u'):
+                    color = (255, 0, 0)
+                else:
+                    color = (0, 255, 0)
+
+            #Unkown face detection function
+            else:
+                if not self.timer_active:
+                    self.timer_active = True
+                    self.timer_start_time = time.time()
+
+                #Check if the timer has exceeded the delay of 5 seconds.
+                if self.timer_active and (time.time() - self.timer_start_time) >= self.capture_delay:
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    # Ensure that face_loc coordinates are valid
+                    unknown_face_path = os.path.join("images", f"unknown_face_{timestamp}.jpg")
+                    #winsound.Beep(1500, 2000)
+                    cv2.imwrite(unknown_face_path, frame)
+                    self.timer_active = False
+
+                    if not self.is_recording:
+                        try:
+                            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                            video_filename = os.path.join("videos", f"unknown_face_{timestamp}.avi")
+                            frame_width, frame_height = frame.shape[1], frame.shape[0]
+                            self.video_writer = cv2.VideoWriter(video_filename, fourcc, 20.0, (frame_width, frame_height))
+                            self.is_recording = True
+                        except Exception as e:
+                            print("Error occurred while creating video:", e)
+
             face_names.append({
                 'name': name,
                 'color': color
