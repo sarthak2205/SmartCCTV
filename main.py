@@ -9,9 +9,12 @@ fra = FaceRecognitionAlgo()
 #The folder where all the images that can be recognised our stored. Later on we will connect this folder with the database. - Sarthak
 fra.load_encoding_images("images/")
 
+for name, encoding in zip(fra.recognised_face_name, fra.recognised_face_array):
+    fra.insert_known_face(name, encoding)
+
 camera_configurations = [
-    {"index": 0, "location": "Default Camera"},
-    {"index": 1, "location": "CCTV 1"}
+    {"index": 1, "location": "CCTV 2"},
+    {"index": 2, "location": "CCTV 3"},
 ]
 
 video_capture_objects = []
@@ -20,7 +23,7 @@ for config in camera_configurations:
     video_capture_objects.append(cv2.VideoCapture(config["index"]))
 
 #Load Camera. 0 stands for default camera that is the laptop camera. Add up 1 to it as we will start connecting the cctv - Sarthak
-#cap = cv2.VideoCapture(1)
+#cap = cv2.VideoCapture(1)basab chaudhuri
 #If we have 3 cameras then load all - Sarthak
 
 while True:
@@ -29,8 +32,7 @@ while True:
         ret, frame = cap.read()
 
         if ret:
-            face_location, face_names = fra.detect_known_faces(frame)
-
+            face_location, face_names = fra.detect_faces(frame, camera_configurations[idx]["location"])
 
             #Face info is an object that consists the information of the name and the color of the frame. - Sarthak
             for face_loc, face_info in zip(face_location, face_names):
