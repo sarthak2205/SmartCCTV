@@ -13,8 +13,7 @@ for name, encoding in zip(fra.recognised_face_name, fra.recognised_face_array):
     fra.insert_known_face(name, encoding)
 
 camera_configurations = [
-    {"index": 1, "location": "CCTV 2"},
-    {"index": 2, "location": "CCTV 3"},
+    {"index": 0, "location": "Default Camera"},
 ]
 
 video_capture_objects = []

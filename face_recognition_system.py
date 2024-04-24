@@ -266,7 +266,7 @@ class FaceRecognitionAlgo:
     def insert_known_face(self, name, encoding):
         cursor = self.mydb.cursor()
         try:
-            # Check if the face already exists in the database
+            # Check if the face already exists the database
             cursor.execute("SELECT * FROM faces WHERE name = %s", (name,))
             if cursor.fetchone() is None:
                 # If the face does not exist, insert it into the database
